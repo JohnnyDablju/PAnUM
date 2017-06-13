@@ -3,9 +3,6 @@ package com.edu4java.android.killthemall;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
-/**
- * Created by romankaczorowski on 17.05.2017.
- */
 
 public class Star {
 

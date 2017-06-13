@@ -1,9 +1,5 @@
 package com.edu4java.android.killthemall;
 
-/**
- * Created by romankaczorowski on 26.04.2017.
- */
-
 import java.util.List;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;

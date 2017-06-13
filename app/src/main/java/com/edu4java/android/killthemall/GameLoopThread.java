@@ -1,9 +1,5 @@
 package com.edu4java.android.killthemall;
 
-/**
- * Created by romankaczorowski on 26.04.2017.
- */
-
 import android.graphics.Canvas;
 
 public class GameLoopThread extends Thread {

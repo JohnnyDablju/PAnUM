@@ -6,10 +6,6 @@ import android.graphics.Rect;
 
 import java.util.Random;
 
-/**
- * Created by romankaczorowski on 26.04.2017.
- */
-
 public class Sprite {
     // direction = 0 up, 1 left, 2 down, 3 right,
     // animation = 3 back, 1 left, 0 front, 2 right

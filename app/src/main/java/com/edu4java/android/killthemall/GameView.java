@@ -1,9 +1,5 @@
 package com.edu4java.android.killthemall;
 
-/**
- * Created by romankaczorowski on 26.04.2017.
- */
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,8 +10,13 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
@@ -35,7 +36,13 @@ public class GameView extends SurfaceView {
     private int start_shoot;
     private int msprite = 6;
 
-
+    private SensorManager sensorManager;
+    private SensorEventListener sensorListener;
+    private Sensor sensor;
+    private float[] mags;
+    private float[] accels;
+    private float[] gravity;
+    private float[] magnetic;
 
     public GameView(Context context) {
         super(context);
@@ -72,6 +79,51 @@ public class GameView extends SurfaceView {
         destroy = sounds.load(context, R.raw.destroy,1);
         destroy_me = sounds.load(context, R.raw.destroy_me,1);
         start_shoot = sounds.load(context, R.raw.star_shoot, 1);
+
+        sensorManager = (SensorManager) this.getContext().getSystemService(Context.SENSOR_SERVICE);
+        sensorListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent event) {
+                switch (event.sensor.getType()) {
+                    case Sensor.TYPE_MAGNETIC_FIELD:
+                        mags = event.values.clone();
+                        break;
+                    case Sensor.TYPE_ACCELEROMETER:
+                        accels = event.values.clone();
+                        break;
+                }
+
+                if (mags != null && accels != null) {
+                    gravity = new float[9];
+                    magnetic = new float[9];
+                    SensorManager.getRotationMatrix(gravity, magnetic, accels, mags);
+                    float[] outGravity = new float[9];
+                    float[] values = new float[3];
+                    SensorManager.remapCoordinateSystem(gravity, SensorManager.AXIS_X, SensorManager.AXIS_Z, outGravity);
+                    SensorManager.getOrientation(outGravity, values);
+
+                    float roll = 1/(values[0]) * 1000;
+                    float pitch = -1 * values[1] * 500;
+                    Log.d("roll", Float.toString(roll));
+                    mags = null;
+                    accels = null;
+                    for (Sprite sprite : sprites) {
+                        if (sprite.goodOne) {
+                            sprite.setSpeed(roll, pitch);
+                        }
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+            }
+        };
+        sensorManager.registerListener(sensorListener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(sensorListener, sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     private void createSprites() {
@@ -104,6 +156,7 @@ public class GameView extends SurfaceView {
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setTextSize(40);
         canvas.drawText(text, canvas.getWidth()/2, canvas.getHeight()/2, paint);
+        sensorManager.unregisterListener(sensorListener);
     }
 
     @Override
@@ -175,8 +228,6 @@ public class GameView extends SurfaceView {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        float x = event.getX();
-        float y = event.getY();
         if (System.currentTimeMillis() - lastClick > 300) {
             lastClick = System.currentTimeMillis();
 
@@ -189,13 +240,6 @@ public class GameView extends SurfaceView {
                                 sprite.getXSpeed()*3, sprite.getYSpeed()*3);
                         sounds.play(start_shoot, 1.0f, 1.0f, 0,0,1.5f);
 
-                    }
-                }
-
-                for (int i = sprites.size() - 1; i >= 0; i--) {
-                    Sprite sprite = sprites.get(i);
-                    if (sprite.goodOne) {
-                        sprite.setSpeed(x,y);
                     }
                 }
             }
